@@ -31,7 +31,12 @@ using System.Text.Json.Serialization;
 // add as an ASP Service
 //  allows injection of IDatastarService, to respond to a request with a Datastar friendly ServerSentEvent
 //  and to read the signals sent by the client
-builder.Services.AddDatastar();
+builder.Services
+    .AddDatastar()
+    .AddJsonOptions(options =>
+    {
+        options.Converters.Add(new JsonStringEnumConverter());
+    });
 
 // displayDate - patching an element
 app.MapGet("/displayDate", async (IDatastarService datastarService) =>

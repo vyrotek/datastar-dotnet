@@ -5,6 +5,13 @@ namespace StarFederation.Datastar.ModelBinding;
 
 public static class ServiceCollectionExtensionMethods
 {
+    public static IDatastarBuilder AddDatastarMvc(this IDatastarBuilder datastarBuilder)
+    {
+        ArgumentNullException.ThrowIfNull(datastarBuilder);
+        datastarBuilder.Services.AddDatastarMvc();
+        return datastarBuilder;
+    }
+
     public static IServiceCollection AddDatastarMvc(this IServiceCollection serviceCollection)
     {
         // ReSharper disable once SuspiciousTypeConversion.Global

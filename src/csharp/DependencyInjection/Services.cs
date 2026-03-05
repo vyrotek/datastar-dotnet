@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using Core = StarFederation.Datastar.FSharp;
 
@@ -97,8 +98,10 @@ public interface IDatastarService
     Task<TType?> ReadSignalsAsync<TType>(JsonSerializerOptions options, CancellationToken cancellationToken);
 }
 
-internal class DatastarService(Core.ServerSentEventGenerator serverSentEventGenerator) : IDatastarService
+internal class DatastarService(Core.ServerSentEventGenerator serverSentEventGenerator, IOptions<DatastarJsonOptions> datastarJsonOptions) : IDatastarService
 {
+    private readonly JsonSerializerOptions signalsJsonSerializerOptions = datastarJsonOptions.Value.SignalsJsonSerializerOptions;
+
     public Task StartServerEventStreamAsync()
         => serverSentEventGenerator.StartServerEventStreamAsync();
 
@@ -136,17 +139,17 @@ internal class DatastarService(Core.ServerSentEventGenerator serverSentEventGene
         => serverSentEventGenerator.RemoveElementAsync(selector, options, cancellationToken);
 
     public Task PatchSignalsAsync<TType>(TType signals)
-        => serverSentEventGenerator.PatchSignalsAsync(JsonSerializer.Serialize(signals, Core.JsonSerializerOptions.SignalsDefault));
+        => serverSentEventGenerator.PatchSignalsAsync(JsonSerializer.Serialize(signals, signalsJsonSerializerOptions));
     public Task PatchSignalsAsync<TType>(TType signals, CancellationToken cancellationToken)
-        => serverSentEventGenerator.PatchSignalsAsync(JsonSerializer.Serialize(signals, Core.JsonSerializerOptions.SignalsDefault), cancellationToken);
+        => serverSentEventGenerator.PatchSignalsAsync(JsonSerializer.Serialize(signals, signalsJsonSerializerOptions), cancellationToken);
     public Task PatchSignalsAsync<TType>(TType signals, JsonSerializerOptions jsonSerializerOptions)
         => serverSentEventGenerator.PatchSignalsAsync(JsonSerializer.Serialize(signals, jsonSerializerOptions));
     public Task PatchSignalsAsync<TType>(TType signals, JsonSerializerOptions jsonSerializerOptions, CancellationToken cancellationToken)
         => serverSentEventGenerator.PatchSignalsAsync(JsonSerializer.Serialize(signals, jsonSerializerOptions), cancellationToken);
     public Task PatchSignalsAsync<TType>(TType signals, PatchSignalsOptions patchSignalsOptions)
-        => serverSentEventGenerator.PatchSignalsAsync(JsonSerializer.Serialize(signals, Core.JsonSerializerOptions.SignalsDefault), patchSignalsOptions);
+        => serverSentEventGenerator.PatchSignalsAsync(JsonSerializer.Serialize(signals, signalsJsonSerializerOptions), patchSignalsOptions);
     public Task PatchSignalsAsync<TType>(TType signals, PatchSignalsOptions patchSignalsOptions, CancellationToken cancellationToken)
-        => serverSentEventGenerator.PatchSignalsAsync(JsonSerializer.Serialize(signals, Core.JsonSerializerOptions.SignalsDefault), patchSignalsOptions, cancellationToken);
+        => serverSentEventGenerator.PatchSignalsAsync(JsonSerializer.Serialize(signals, signalsJsonSerializerOptions), patchSignalsOptions, cancellationToken);
     public Task PatchSignalsAsync<TType>(TType signals, JsonSerializerOptions jsonSerializerOptions, PatchSignalsOptions patchSignalsOptions)
         => serverSentEventGenerator.PatchSignalsAsync(JsonSerializer.Serialize(signals, jsonSerializerOptions), patchSignalsOptions);
     public Task PatchSignalsAsync<TType>(TType signals, JsonSerializerOptions jsonSerializerOptions, PatchSignalsOptions patchSignalsOptions, CancellationToken cancellationToken)
@@ -170,11 +173,11 @@ internal class DatastarService(Core.ServerSentEventGenerator serverSentEventGene
         => await serverSentEventGenerator.ReadSignalsAsync(cancellationToken) is { Length: > 0 } signals ? signals : null;
 
     public async Task<TType?> ReadSignalsAsync<TType>()
-        => await serverSentEventGenerator.ReadSignalsAsync() is { Length: > 0 } signals ? JsonSerializer.Deserialize<TType>(signals, Core.JsonSerializerOptions.SignalsDefault) : default;
+        => await serverSentEventGenerator.ReadSignalsAsync() is { Length: > 0 } signals ? JsonSerializer.Deserialize<TType>(signals, signalsJsonSerializerOptions) : default;
     public async Task<TType?> ReadSignalsAsync<TType>(JsonSerializerOptions options)
         => await serverSentEventGenerator.ReadSignalsAsync() is { Length: > 0 } signals ? JsonSerializer.Deserialize<TType>(signals, options) : default;
     public async Task<TType?> ReadSignalsAsync<TType>(CancellationToken cancellationToken)
-        => await serverSentEventGenerator.ReadSignalsAsync(cancellationToken) is { Length: > 0 } signals ? JsonSerializer.Deserialize<TType>(signals, Core.JsonSerializerOptions.SignalsDefault) : default;
+        => await serverSentEventGenerator.ReadSignalsAsync(cancellationToken) is { Length: > 0 } signals ? JsonSerializer.Deserialize<TType>(signals, signalsJsonSerializerOptions) : default;
     public async Task<TType?> ReadSignalsAsync<TType>(JsonSerializerOptions options, CancellationToken cancellationToken)
         => await serverSentEventGenerator.ReadSignalsAsync(cancellationToken) is { Length: > 0 } signals ? JsonSerializer.Deserialize<TType>(signals, options) : default;
 }

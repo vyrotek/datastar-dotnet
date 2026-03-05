@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using StarFederation.Datastar.DependencyInjection;
 
@@ -10,7 +11,12 @@ public class Program
     public static void Main(string[] args)
     {
         WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-        builder.Services.AddDatastar();
+        builder.Services
+            .AddDatastar()
+            .AddJsonOptions(options =>
+            {
+                options.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+            });
 
         WebApplication app = builder.Build();
         app.UseStaticFiles();
@@ -21,7 +27,7 @@ public class Program
             Signals? mySignals = await datastarService.ReadSignalsAsync<Signals>();
             Debug.Assert(mySignals != null, nameof(mySignals) + " != null");
 
-            await datastarService.PatchSignalsAsync(new { show_patch_element_message = true });
+            await datastarService.PatchSignalsAsync(new { ShowPatchElementMessage = true });
 
             for (var index = 1; index < message.Length; ++index)
             {
@@ -38,15 +44,15 @@ public class Program
             Signals? mySignals = await datastarService.ReadSignalsAsync<Signals>();
             Debug.Assert(mySignals != null, nameof(mySignals) + " != null");
 
-            await datastarService.PatchSignalsAsync(new { show_patch_element_message = false });
+            await datastarService.PatchSignalsAsync(new { ShowPatchElementMessage = false });
 
             for (var index = 1; index < message.Length; ++index)
             {
-                await datastarService.PatchSignalsAsync(new { signals_message = message[..index] });
+                await datastarService.PatchSignalsAsync(new { SignalsMessage = message[..index] });
                 await Task.Delay(TimeSpan.FromMilliseconds(mySignals.Delay.GetValueOrDefault(0)));
             }
 
-            await datastarService.PatchSignalsAsync(new { signals_message = message });
+            await datastarService.PatchSignalsAsync(new { SignalsMessage = message });
         });
 
         app.MapGet("/execute-script", (IDatastarService datastarService) =>
